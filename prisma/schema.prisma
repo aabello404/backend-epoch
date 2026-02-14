@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id Int @id @default(autoincrement())
+
+  name String 
+  email String @unique
+  hash String
+
+  createdOn DateTime @default(now())
+  lastUpdate DateTime @updatedAt
+
+  profilePhotoUrl String?
+  Post Epoch[]
+  likes Likes[]
+}
+model Epoch{
+  id Int @id @default(autoincrement())
+  title String
+  location String
+  year Int
+  imageUrl String
+  description String
+  userId Int
+  Post User @relation(fields: [userId],references: [id])
+  catId Int?
+  cat Category? @relation(fields: [catId],references: [id])
+
+  tags EpochTags[]
+
+  likes Likes[]
+
+  createdOn DateTime @default(now())
+}
+model Tags{
+  id Int @id @default(autoincrement())
+  
+  tagName String @unique
+
+  epoch EpochTags[]
+}
+model Category{
+  id Int @id @default(autoincrement())
+
+  nameCat String @unique
+
+  epoch Epoch[]
+}
+model Likes{
+  id Int @id @default(autoincrement())
+
+  userId Int
+  epoch Epoch @relation(fields: [epochId],references: [id])
+
+  epochId Int
+  user User @relation(fields: [userId],references: [id])
+
+
+  @@unique([userId,epochId])
+  @@index([epochId])
+
+}
+
+model EpochTags{
+  epochId Int
+  epoch Epoch @relation(fields: [epochId],references: [id])
+
+  tagId String 
+  tag Tags @relation(fields: [tagId],references: [tagName])
+
+  @@id(fields: [epochId,tagId])
+}
