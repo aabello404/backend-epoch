@@ -40,7 +40,6 @@ export class UserController {
   }
   @Get('profile')
   getProfile(@Request() req: any) {
-    // console.log(req.user);
     return this.userService.getProfile(req.user);
   }
   @Put('editprofile')
@@ -54,15 +53,3 @@ export class UserController {
     return this.userService.getSearch(dto);
   }
 }
-
-// @Get()
-//     hello()
-//     {
-//         this.userService.getfeed();
-//     }
-//     @Post("upload")
-//     @UseInterceptors(FileInterceptor('photo'))
-//     check(@Body() data:any)
-//     {
-//         //console.log(data.photo.files[0]);
-//     }

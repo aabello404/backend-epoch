@@ -4,7 +4,6 @@ import {
   OnModuleInit,
   NotFoundException,
   ForbiddenException,
-  UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaClient } from '../../generated/prisma/client.js';
@@ -75,7 +74,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     const saltOrRounds = 10;
     const { name, email, hash } = objNewUser;
     const hashed = await bcrypt.hash(hash, saltOrRounds);
-    // console.log(hashed);
 
     try {
       const newUser = await this.user.create({
@@ -88,7 +86,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       if (newUser) {
         const payload = { id: newUser.id, email: newUser.email };
 
-        // console.log(newUser);
         return {
           access_token: await this.jwtService.signAsync(payload),
           message: 'Account Successifully created',
@@ -163,24 +160,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
           year: parseInt(obj.YearTaken),
           tags: {
             create: arratag,
-            // [
-            //   {
-            //     tag: {
-            //       connectOrCreate: {
-            //         where: { tagName: 'mosque' },
-            //         create: { tagName: 'mosque' },
-            //       },
-            //     },
-            //   },
-            //   {
-            //     tag: {
-            //       connectOrCreate: {
-            //         where: { tagName: 'car' },
-            //         create: { tagName: 'car' },
-            //       },
-            //     },
-            //   },
-            // ],
           },
         },
       });
@@ -336,20 +315,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
           epoch: true,
         },
       });
-      // console.log(th)
-      // const post = await this.tags.findMany({
-      //   where: {
-      //     OR: Keywords.map((keyword) => ({
-      //       tagName: keyword,
-      //     })),
-      //   },
 
-      //   select: {
-      //     epoch: true,
-      //   },
-      // });
-      // if (!post.length) throw new NotFoundException('Not post found');
-      // console.log(post)
       return post;
     } catch (err) {
       throw err;
