@@ -52,4 +52,8 @@ export class UserController {
   getSearch(@Query('query') dto: any) {
     return this.userService.getSearch(dto);
   }
+  @Get('userPosts')
+  getUserPosts(@Query('id') id: any) {
+    return this.userService.getUserPosts(parseInt(id));
+  }
 }

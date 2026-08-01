@@ -25,4 +25,16 @@ export class UserService {
     arrayKeyWords = arrayKeyWords.map((e) => e.toLowerCase());
     return this.prismaService.getSearch(arrayKeyWords);
   }
+  async getUserPosts(id:number)
+  {
+    const result = await this.prismaService.epoch.findMany({
+      where: {
+        userId: id,
+      },
+      orderBy: {
+        createdOn: 'desc',
+      },
+    });
+    return result;
+  }
 }
