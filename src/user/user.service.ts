@@ -37,4 +37,15 @@ export class UserService {
     });
     return result;
   }
+  async getUserDP(id: { id: number }) {
+    const result = await this.prismaService.user.findUnique({
+      where: {
+        id: id.id,
+      },
+      select: {
+        profilePhotoUrl: true,
+      },
+    });
+    return result;
+  }
 }

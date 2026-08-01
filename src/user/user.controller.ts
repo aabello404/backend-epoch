@@ -56,4 +56,8 @@ export class UserController {
   getUserPosts(@Query('id') id: any) {
     return this.userService.getUserPosts(parseInt(id));
   }
+  @Get('getUserDP')
+  getUserDP(@Query('id') id: any) {
+    return this.userService.getUserDP({ id: parseInt(id) });
+  }
 }
