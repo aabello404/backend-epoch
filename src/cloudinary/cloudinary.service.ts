@@ -1,8 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { v2 as cloudinary } from 'cloudinary';
-import * as path from 'path';
-import { promises as fs } from 'fs';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import {
+  v2 as cloudinary,
+  UploadApiResponse,
+} from 'cloudinary';
+import { Readable } from 'stream';
 import { PrismaService } from '../prisma/prisma.service';
+import Multer from 'multer';
+
 @Injectable()
 export class CloudinaryService {
   constructor(private readonly prismaService: PrismaService) {
@@ -12,51 +20,66 @@ export class CloudinaryService {
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
   }
+
+  // Helper method to upload a memory buffer to Cloudinary
+  private uploadBuffer(
+    fileBuffer: Buffer,
+    folder: string,
+  ): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          transformation: [
+            {
+              fetch_format: 'auto',
+              quality: 'auto',
+            },
+          ],
+        },
+        (error, result:any) => {
+          if (error) return reject(error);
+          resolve(result);
+        },
+      );
+
+      // Convert memory buffer into a readable stream and pipe it to Cloudinary
+      Readable.from(fileBuffer).pipe(uploadStream);
+    });
+  }
+
   async handleUpload(data: Express.Multer.File, obj: any, Poster: any) {
-    const Filepath = path.join(
-      process.cwd(),
-      '..',
-      'public/uploads/images',
-      data.originalname,
-    );
     try {
-      await fs.writeFile(Filepath, data.buffer);
-      const result = await cloudinary.uploader.upload(Filepath, {
-        folder: '/Epoch/Images',
-        transformation: [
-          {
-            fetch_format: 'auto',
-            quality: 'auto',
-          },
-        ],
-      });
-      if (result) return this.prismaService.uploadEpoch(result, obj, Poster);
-      else {
+      const result = await this.uploadBuffer(data.buffer, '/Epoch/Images');
+
+      if (result) {
+        return await this.prismaService.uploadEpoch(result, obj, Poster);
+      } else {
         throw new ConflictException('File upload failed');
       }
-    } catch (error) {
-      throw error;
+    } catch (error:any) {
+      throw error instanceof ConflictException
+        ? error
+        : new InternalServerErrorException(error.message);
     }
   }
-  async editProfile(data: Express.Multer.File, user: any) {
-    const Filepath = path.join(
-      process.cwd(),
-      '..',
-      'public/uploads/images',
-      data.originalname,
-    );
-    await fs.writeFile(Filepath, data.buffer);
-    const result = await cloudinary.uploader.upload(Filepath, {
-      folder: '/Epoch/profilephotos',
-      transformation: [
-        {
-          fetch_format: 'auto',
-          quality: 'auto',
-        },
-      ],
-    });
 
-    if (result) return this.prismaService.editProfile(result, user);
-    else throw new ConflictException('Something went wrong');
+  async editProfile(data: Express.Multer.File, user: any) {
+    try {
+      const result = await this.uploadBuffer(
+        data.buffer,
+        '/Epoch/profilephotos',
+      );
+
+      if (result) {
+        return await this.prismaService.editProfile(result, user);
+      } else {
+        throw new ConflictException('Something went wrong');
+      }
+    } catch (error:any) {
+      throw error instanceof ConflictException
+        ? error
+        : new InternalServerErrorException(error.message);
+    }
   }
 }
