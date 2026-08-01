@@ -3,7 +3,15 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'http://localhost:9000',
+      'https://project-react-rust.vercel.app',
+      'http://localhost:5173',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  });
   await app.listen(process.env.PORT ?? 9000);
 }
 bootstrap();
